@@ -1,0 +1,14 @@
+{
+  "name": "hipanime-ani-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "axios": "^0.21.1",
+    // other dependencies
+  },
+  "devDependencies": {
+    // dev dependencies
+  },
+  "scripts": {
+    "start": "vercel dev"
+  }
+}
