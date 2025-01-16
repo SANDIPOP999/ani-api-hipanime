@@ -128,12 +128,18 @@ module.exports = async (req, res) => {
           query = getAnilistUpcomingQuery();
           break;
         case 'search':
-          const searchQuery = req.body.query;
+          const { query: searchQuery } = req.body;  // Destructure the query parameter from body
+          if (!searchQuery) {
+            return res.status(400).json({ error: "Search query is required" });
+          }
           query = getAnilistSearchQuery(searchQuery);
           break;
         case 'anime':
-          const animeId = req.body.id;
-          query = getAnilistAnimeQuery(animeId);
+          const { id } = req.body;  // Destructure the id parameter from body
+          if (!id) {
+            return res.status(400).json({ error: "Anime ID is required" });
+          }
+          query = getAnilistAnimeQuery(id);
           break;
         case 'banner':
           query = getAnilistBannerQuery();
@@ -163,6 +169,7 @@ module.exports = async (req, res) => {
 
       res.status(200).json({ results: result });
     } catch (error) {
+      console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   } else {
