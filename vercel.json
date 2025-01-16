@@ -1,15 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/meta/anilist/index.js",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
-{ "src": "/meta/anilist/(.*)", "dest": "/api/meta/anilist/index.js" } 
-  
-    {
+    { "src": "/meta/anilist/(.*)", "dest": "/api/meta/anilist/index.js" }, 
+ {
       "src": "/",
       "dest": "/pages/index.html"
     }
