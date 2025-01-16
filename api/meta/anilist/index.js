@@ -134,7 +134,7 @@ module.exports = async (req, res) => {
           }
           query = getAnilistSearchQuery(searchQuery);
           break;
-        case 'anime':
+        case 'info':
           const { id } = req.body;  // Destructure the id parameter from body
           if (!id) {
             return res.status(400).json({ error: "Anime ID is required" });
@@ -159,7 +159,7 @@ module.exports = async (req, res) => {
         result = data.data.Page.airingSchedules;
       } else if (type === 'search') {
         result = data.data.Page.media;
-      } else if (type === 'anime') {
+      } else if (type === 'info') {
         let anime = data.data.Media;
         anime.recommendations = anime.recommendations.edges.map(edge => edge.node.mediaRecommendation);
         result = anime;
