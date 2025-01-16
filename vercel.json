@@ -29,7 +29,7 @@
     },
     {
       "src": "/meta/anilist/info",
-      "dest": "/api/meta/anilist/index.js?type=anime"
+      "dest": "/api/meta/anilist/index.js?type=info"
     },
     {
       "src": "/",
