@@ -28,7 +28,7 @@
       "dest": "/api/meta/anilist/index.js?type=search"
     },
     {
-      "src": "/meta/anilist/anime",
+      "src": "/meta/anilist/info",
       "dest": "/api/meta/anilist/index.js?type=anime"
     },
     {
