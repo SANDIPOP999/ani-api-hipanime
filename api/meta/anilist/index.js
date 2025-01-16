@@ -1,15 +1,15 @@
-import axios from "axios";
+import axios from 'axios';
 
 const ANILIST_API_URL = "https://graphql.anilist.co";
 
 export default async function handler(req, res) {
   const { method, query } = req;
   
-  if (method === "GET") {
+  if (method === 'POST') {
     const { pathname } = req.url;
 
     // Route: /meta/anilist/scheduled
-    if (pathname === "/meta/anilist/scheduled") {
+    if (pathname === '/meta/anilist/scheduled') {
       try {
         const query = `
           query {
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         `;
 
         const response = await axios.post(ANILIST_API_URL, { query }, {
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
 
         const scheduledAnime = response.data.data.Page.airingSchedules.map(schedule => ({
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /meta/anilist/trending
-    else if (pathname === "/meta/anilist/trending") {
+    else if (pathname === '/meta/anilist/trending') {
       try {
         const query = `
           query {
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         `;
 
         const response = await axios.post(ANILIST_API_URL, { query }, {
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
 
         const trendingAnime = response.data.data.MediaTrend.map(item => ({
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /meta/anilist/banner
-    else if (pathname === "/meta/anilist/banner") {
+    else if (pathname === '/meta/anilist/banner') {
       try {
         const query = `
           query {
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
         `;
 
         const response = await axios.post(ANILIST_API_URL, { query }, {
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
 
         const banners = response.data.data.Page.media.map(item => item.bannerImage);
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /meta/anilist/info
-    else if (pathname.startsWith("/meta/anilist/info")) {
+    else if (pathname.startsWith('/meta/anilist/info')) {
       const { id } = query;
 
       if (!id) {
@@ -136,7 +136,7 @@ export default async function handler(req, res) {
           query,
           variables: { id: parseInt(id) }
         }, {
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         });
 
         const animeInfo = {
@@ -157,6 +157,6 @@ export default async function handler(req, res) {
       res.status(404).json({ error: "Not Found" });
     }
   } else {
-    res.status(405).json({ error: "Method Not Allowed" });
+    res.status(405).json({ error: "Method Not Allowed. Please use POST." });
   }
 }
