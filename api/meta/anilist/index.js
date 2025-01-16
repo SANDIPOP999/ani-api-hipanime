@@ -135,7 +135,7 @@ module.exports = async (req, res) => {
           query = getAnilistSearchQuery(searchQuery);
           break;
         case 'info':
-          const { id } = req.body;  // Destructure the id parameter from body
+          const { id } = req.query;  // Destructure the id parameter from body
           if (!id) {
             return res.status(400).json({ error: "Anime ID is required" });
           }
