@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/meta/anilist/scheduled",
+      "dest": "/api/meta/anilist/scheduled"
+    },
+    {
+      "src": "/meta/anilist/trending",
+      "dest": "/api/meta/anilist/trending"
+    },
+    {
+      "src": "/meta/anilist/banner",
+      "dest": "/api/meta/anilist/banner"
+    },
+    {
+      "src": "/meta/anilist/info",
+      "dest": "/api/meta/anilist/info"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ]
+}
