@@ -7,7 +7,7 @@
     }
   ],
   "routes": [
-{ "src": "/meta/anilist/(.*)", "dest": "/api/meta/anilist/index.js" }, 
+{ "src": "/meta/anilist/(.*)", "dest": "/api/meta/anilist/index.js" } 
   
     {
       "src": "/",
