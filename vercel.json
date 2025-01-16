@@ -7,25 +7,8 @@
     }
   ],
   "routes": [
-    {
-      "src": "/meta/anilist/banner",
-      "dest": "/api/meta/anilist/index.js?type=banner"
-    },
-    {
-      "src": "/meta/anilist/trending",
-      "dest": "/api/meta/anilist/index.js?type=trending"
-    },
-    {
-      "src": "/meta/anilist/upcoming",
-      "dest": "/api/meta/anilist/index.js?type=upcoming"
-    },
-    {
-      "src": "/meta/anilist/search",
-      "dest": "/api/meta/anilist/index.js?type=search"
-    },
-    {
-      "src": "/meta/anilist/anime",
-      "dest": "/api/meta/anilist/index.js?type=anime"}, 
+{ "src": "/meta/anilist/(.*)", "dest": "/api/meta/anilist/index.js" }, 
+  
     {
       "src": "/",
       "dest": "/pages/index.html"
