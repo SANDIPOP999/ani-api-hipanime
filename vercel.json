@@ -1,21 +1,7 @@
 {
   "version": 2,
   "routes": [
-    {
-      "src": "/meta/anilist/scheduled",
-      "dest": "/api/meta/anilist/scheduled.js"
-    },
-    {
-      "src": "/meta/anilist/trending",
-      "dest": "/api/meta/anilist/trending.js"
-    },
-    {
-      "src": "/meta/anilist/banner",
-      "dest": "/api/meta/anilist/banner.js"
-    },
-    {
-      "src": "/meta/anilist/info",
-      "dest": "/api/meta/anilist/info.js"
+    { "src": "/meta/anilist/(.*)", "dest": "/api/meta/anilist/index.js" 
     },
     {
       "src": "/",
