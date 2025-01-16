@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AniList API Landing Page</title>
+  <style>
+    /* General Styles */
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #1e1e2e;
+      color: #fff;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .header {
+      margin-bottom: 40px;
+    }
+
+    .title {
+      font-size: 3em;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    .subtitle {
+      font-size: 1.5em;
+      color: #aaa;
+    }
+
+    /* Anime Display Section */
+    .anime-display {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 40px 0;
+    }
+
+    .anime-card {
+      background-color: #29293f;
+      border-radius: 10px;
+      overflow: hidden;
+      width: 200px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .anime-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+
+    .anime-card p {
+      margin: 10px 0;
+      color: #ddd;
+    }
+
+    .anime-card:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Endpoints Section */
+    .endpoints {
+      margin-top: 40px;
+    }
+
+    .endpoints h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      animation: slideUp 1s ease-in-out;
+    }
+
+    .endpoints ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .endpoints li {
+      margin: 10px 0;
+      color: #ccc;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #777;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">Welcome to the AniList API</h1>
+      <p class="subtitle">Your gateway to anime data and trends!</p>
+    </header>
+
+    <main>
+      <section class="anime-display">
+        <div class="anime-card" id="anime1">
+          <img src="https://s4.anilist.co/file/anilistcdn/media/anime/banner/1.jpg" alt="Anime 1">
+          <p>Explore Trending Anime</p>
+        </div>
+        <div class="anime-card" id="anime2">
+          <img src="https://s4.anilist.co/file/anilistcdn/media/anime/banner/2.jpg" alt="Anime 2">
+          <p>Find Anime Info</p>
+        </div>
+        <div class="anime-card" id="anime3">
+          <img src="https://s4.anilist.co/file/anilistcdn/media/anime/banner/3.jpg" alt="Anime 3">
+          <p>Discover Anime Schedules</p>
+        </div>
+      </section>
+
+      <section class="endpoints">
+        <h2>Available Endpoints</h2>
+        <ul>
+          <li><strong>Trending Anime:</strong> <code>/meta/anilist/trending</code></li>
+          <li><strong>Scheduled Anime:</strong> <code>/meta/anilist/scheduled</code></li>
+          <li><strong>Anime Info:</strong> <code>/meta/anilist/info?id=ANIME_ID</code></li>
+          <li><strong>Trending Banners:</strong> <code>/meta/anilist/banner</code></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Made with ❤️ by <strong>Anonymous-Kun</strong></p>
+    </footer>
+  </div>
+
+  <script>
+    // Add animation to anime cards
+    document.querySelectorAll('.anime-card').forEach((card, index) => {
+      setTimeout(() => {
+        card.style.animation = 'fadeIn 1s ease-in-out';
+      }, index * 200);
+    });
+
+    // Log click events for analytics or debugging
+    document.querySelectorAll('.anime-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        console.log(`${card.querySelector('p').textContent} clicked!`);
+      });
+    });
+  </script>
+</body>
+</html>
