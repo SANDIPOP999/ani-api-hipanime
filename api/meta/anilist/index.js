@@ -1,162 +1,171 @@
-import axios from 'axios';
+const fetch = require('node-fetch');
 
-const ANILIST_API_URL = "https://graphql.anilist.co";
+// Helper function to fetch data from AniList API
+async function fetchAnilistData(query) {
+  const url = "https://graphql.anilist.co";
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ query })
+  };
 
-export default async function handler(req, res) {
-  const { method, query } = req;
-  
-  if (method === 'POST') {
-    const { pathname } = req.url;
+  const res = await fetch(url, options);
+  const data = await res.json();
+  return data;
+}
 
-    // Route: /meta/anilist/scheduled
-    if (pathname === '/meta/anilist/scheduled') {
-      try {
-        const query = `
-          query {
-            Page(perPage: 10) {
-              airingSchedules {
-                media {
-                  id
-                  title {
-                    romaji
-                  }
-                  nextAiringEpisode {
-                    airingAt
-                    episode
-                  }
-                }
-              }
-            }
-          }
-        `;
-
-        const response = await axios.post(ANILIST_API_URL, { query }, {
-          headers: { "Content-Type": "application/json" },
-        });
-
-        const scheduledAnime = response.data.data.Page.airingSchedules.map(schedule => ({
-          title: schedule.media.title.romaji,
-          episode: schedule.media.nextAiringEpisode.episode,
-          airingAt: schedule.media.nextAiringEpisode.airingAt,
-        }));
-
-        res.status(200).json(scheduledAnime);
-      } catch (error) {
-        console.error("Error fetching scheduled anime:", error);
-        res.status(500).json({ error: "Failed to fetch scheduled anime." });
+// Define different queries based on endpoint type
+const getAnilistTrendingQuery = () => `
+  query {
+    Page {
+      media(type: ANIME, sort: TRENDING_DESC) {
+        id
+        title {
+          romaji
+          english
+        }
+        coverImage {
+          large
+        }
       }
     }
+  }
+`;
 
-    // Route: /meta/anilist/trending
-    else if (pathname === '/meta/anilist/trending') {
-      try {
-        const query = `
-          query {
-            MediaTrend(sort: TRENDING_DESC, type: ANIME, perPage: 10) {
-              media {
-                id
-                title {
-                  romaji
-                }
-                coverImage {
-                  large
-                }
-              }
-            }
+const getAnilistUpcomingQuery = () => `
+  query {
+    Page {
+      airingSchedules {
+        time
+        episode
+        media {
+          id
+          title {
+            romaji
           }
-        `;
-
-        const response = await axios.post(ANILIST_API_URL, { query }, {
-          headers: { "Content-Type": "application/json" },
-        });
-
-        const trendingAnime = response.data.data.MediaTrend.map(item => ({
-          title: item.media.title.romaji,
-          coverImage: item.media.coverImage.large,
-        }));
-
-        res.status(200).json(trendingAnime);
-      } catch (error) {
-        console.error("Error fetching trending anime:", error);
-        res.status(500).json({ error: "Failed to fetch trending anime." });
+          coverImage {
+            large
+          }
+        }
       }
     }
+  }
+`;
 
-    // Route: /meta/anilist/banner
-    else if (pathname === '/meta/anilist/banner') {
-      try {
-        const query = `
-          query {
-            Page(perPage: 5) {
-              media(type: ANIME, sort: TRENDING_DESC) {
-                bannerImage
-              }
-            }
-          }
-        `;
-
-        const response = await axios.post(ANILIST_API_URL, { query }, {
-          headers: { "Content-Type": "application/json" },
-        });
-
-        const banners = response.data.data.Page.media.map(item => item.bannerImage);
-
-        res.status(200).json(banners);
-      } catch (error) {
-        console.error("Error fetching anime banners:", error);
-        res.status(500).json({ error: "Failed to fetch anime banners." });
+const getAnilistSearchQuery = (query) => `
+  query {
+    Page(page: 1, perPage: 10) {
+      media(search: "${query}") {
+        id
+        title {
+          romaji
+          english
+        }
+        coverImage {
+          large
+        }
       }
     }
+  }
+`;
 
-    // Route: /meta/anilist/info
-    else if (pathname.startsWith('/meta/anilist/info')) {
-      const { id } = query;
-
-      if (!id) {
-        return res.status(400).json({ error: "Anime ID is required." });
+const getAnilistAnimeQuery = (id) => `
+  query {
+    Media(id: ${id}) {
+      id
+      title {
+        romaji
+        english
       }
-
-      try {
-        const query = `
-          query ($id: Int) {
-            Media(id: $id) {
-              id
+      description
+      coverImage {
+        large
+      }
+      recommendations {
+        edges {
+          node {
+            mediaRecommendation {
               title {
                 romaji
               }
-              description
               coverImage {
                 large
               }
             }
           }
-        `;
-
-        const response = await axios.post(ANILIST_API_URL, {
-          query,
-          variables: { id: parseInt(id) }
-        }, {
-          headers: { "Content-Type": "application/json" },
-        });
-
-        const animeInfo = {
-          title: response.data.data.Media.title.romaji,
-          description: response.data.data.Media.description,
-          coverImage: response.data.data.Media.coverImage.large,
-        };
-
-        res.status(200).json(animeInfo);
-      } catch (error) {
-        console.error("Error fetching anime info:", error);
-        res.status(500).json({ error: "Failed to fetch anime info." });
+        }
       }
     }
+  }
+`;
 
-    // Invalid route
-    else {
-      res.status(404).json({ error: "Not Found" });
+const getAnilistBannerQuery = () => `
+  query {
+    Page {
+      media(type: ANIME, sort: TRENDING_DESC) {
+        coverImage {
+          large
+        }
+      }
+    }
+  }
+`;
+
+module.exports = async (req, res) => {
+  const { type } = req.query;
+
+  if (req.method === "POST") {
+    try {
+      let query = '';
+      switch (type) {
+        case 'trending':
+          query = getAnilistTrendingQuery();
+          break;
+        case 'upcoming':
+          query = getAnilistUpcomingQuery();
+          break;
+        case 'search':
+          const searchQuery = req.body.query;
+          query = getAnilistSearchQuery(searchQuery);
+          break;
+        case 'anime':
+          const animeId = req.body.id;
+          query = getAnilistAnimeQuery(animeId);
+          break;
+        case 'banner':
+          query = getAnilistBannerQuery();
+          break;
+        default:
+          res.status(400).json({ error: "Invalid endpoint type" });
+          return;
+      }
+
+      const data = await fetchAnilistData(query);
+      
+      // Send the response based on the endpoint type
+      let result;
+      if (type === 'trending') {
+        result = data.data.Page.media;
+      } else if (type === 'upcoming') {
+        result = data.data.Page.airingSchedules;
+      } else if (type === 'search') {
+        result = data.data.Page.media;
+      } else if (type === 'anime') {
+        let anime = data.data.Media;
+        anime.recommendations = anime.recommendations.edges.map(edge => edge.node.mediaRecommendation);
+        result = anime;
+      } else if (type === 'banner') {
+        result = data.data.Page.media.map(item => item.coverImage.large);
+      }
+
+      res.status(200).json({ results: result });
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error" });
     }
   } else {
-    res.status(405).json({ error: "Method Not Allowed. Please use POST." });
+    res.status(405).json({ error: "Method Not Allowed" });
   }
-}
+};
