@@ -1,5 +1,8 @@
-const express = require('express');
-const fetch = require('node-fetch');
+import express from 'express';
+import fetch from 'node-fetch';
+
+// Initialize Express.js app
+const app = express();
 
 // Helper function to fetch data from AniList API
 async function fetchAnilistData(query, variables = {}) {
@@ -100,14 +103,12 @@ const getAnilistTrendingQuery = `
   }
 `;
 
-const app = express();
+// Express.js routes
+app.use(express.json());  // For parsing application/json
 
-// Middleware to handle JSON body parsing
-app.use(express.json());
-
-// Route to fetch anime info by ID
+// Route for fetching anime info
 app.post('/api/meta/anilist/info/:id', async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params;  // Extract ID from the URL
 
   if (!id || isNaN(id)) {
     return res.status(400).json({ error: "Valid Anime ID is required in the URL" });
@@ -116,8 +117,10 @@ app.post('/api/meta/anilist/info/:id', async (req, res) => {
   try {
     const variables = { id: parseInt(id) };
     const data = await fetchAnilistData(getAnilistAnimeQuery, variables);
+
     const anime = data.data.Media;
     anime.recommendations = anime.recommendations.edges.map(edge => edge.node.mediaRecommendation);
+
     res.status(200).json({ results: anime });
   } catch (error) {
     console.error("Error:", error.message);
@@ -125,10 +128,11 @@ app.post('/api/meta/anilist/info/:id', async (req, res) => {
   }
 });
 
-// Route to fetch trending anime
+// Route for fetching trending anime
 app.post('/api/meta/anilist/trending', async (req, res) => {
   try {
     const data = await fetchAnilistData(getAnilistTrendingQuery);
+
     res.status(200).json({ results: data.data.Page.media });
   } catch (error) {
     console.error("Error:", error.message);
@@ -136,5 +140,5 @@ app.post('/api/meta/anilist/trending', async (req, res) => {
   }
 });
 
-// Export the Express app as a serverless function for Vercel
-module.exports = app;
+// Export Express.js app to Vercel's serverless handler
+export default app;
