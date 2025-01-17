@@ -80,24 +80,31 @@ const getAnilistAnimeQuery = (id) => `
         romaji
         english
       }
-      description
-      coverImage {
-        large
-      }
-      recommendations {
-        edges {
-          node {
-            mediaRecommendation {
-              title {
-                romaji
-              }
-              coverImage {
-                large
-              }
-            }
-          }
+      type
+        format
+        status
+        episodes
+        season
+        seasonYear
+        startDate {
+          year
+          month
+          day
         }
-      }
+        endDate {
+          year
+          month
+          day
+        }
+        genres
+        description
+        duration
+        averageScore
+        coverImage {
+          extraLarge
+          large
+          medium
+        }
     }
   }
 `;
