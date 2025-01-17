@@ -1,141 +1,131 @@
-import express from 'express';
-import fetch from 'node-fetch';
-import serverless from 'serverless-http';
+const fetch = require('node-fetch');
 
-const app = express();
-
-// Helper function to fetch AniList API data
-async function fetchAnilistData(query, variables = {}) {
-  const url = 'https://graphql.anilist.co';
+async function fetchAnilistData(query) {
+  const url = "https://graphql.anilist.co";
   const options = {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+      "Content-Type": "application/json",
+      Accept: "application/json",
     },
-    body: JSON.stringify({ query, variables }),
+    body: JSON.stringify({ query }),
   };
 
   const res = await fetch(url, options);
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(`AniList API Error: ${error.errors[0]?.message || 'Unknown error'}`);
+    throw new Error(`AniList API Error: ${error.message}`);
   }
   return res.json();
 }
 
-// GraphQL Queries
-const getAnilistAnimeQuery = `
-  query ($id: Int) {
-    Media(id: $id, type: ANIME) {
-      id
-      title {
-        romaji
-        english
-        native
-      }
-      type
-      format
-      status
-      episodes
-      season
-      seasonYear
-      startDate {
-        year
-        month
-        day
-      }
-      endDate {
-        year
-        month
-        day
-      }
-      genres
-      description
-      duration
-      averageScore
-      isAdult
-      recommendations {
-        edges {
-          node {
-            mediaRecommendation {
+module.exports = async (req, res) => {
+  const { type } = req.query;
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  try {
+    let query;
+    switch (type) {
+      case "trending":
+        query = `
+          query {
+            Page {
+              media(type: ANIME, sort: TRENDING_DESC) {
+                id
+                title {
+                  romaji
+                  english
+                }
+                coverImage {
+                  large
+                }
+              }
+            }
+          }
+        `;
+        break;
+      case "search":
+        const { query: searchQuery } = req.body;
+        if (!searchQuery) {
+          return res.status(400).json({ error: "Search query is required" });
+        }
+        query = `
+          query {
+            Page(page: 1, perPage: 10) {
+              media(search: "${searchQuery}") {
+                id
+                title {
+                  romaji
+                  english
+                }
+                coverImage {
+                  large
+                }
+              }
+            }
+          }
+        `;
+        break;
+      case "info":
+        const { id } = req.query;
+        if (!id || isNaN(id)) {
+          return res.status(400).json({ error: "Valid Anime ID is required" });
+        }
+        query = `
+          query {
+            Media(id: ${id}) {
               id
               title {
                 romaji
                 english
               }
+              type
+              format
+              status
+              episodes
+              season
+              seasonYear
+              startDate {
+                year
+                month
+                day
+              }
+              endDate {
+                year
+                month
+                day
+              }
+              genres
+              description
+              duration
+              averageScore
               coverImage {
+                extraLarge
                 large
+                medium
               }
             }
           }
-        }
-      }
-      streamingEpisodes {
-        title
-        thumbnail
-        url
-      }
-      coverImage {
-        extraLarge
-        large
-        medium
-      }
+        `;
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid endpoint type" });
     }
-  }
-`;
 
-const getAnilistTrendingQuery = `
-  query {
-    Page {
-      media(type: ANIME, sort: TRENDING_DESC) {
-        id
-        title {
-          romaji
-          english
-        }
-        coverImage {
-          large
-        }
-      }
+    const data = await fetchAnilistData(query);
+
+    if (type === "trending") {
+      return res.status(200).json(data.data.Page.media);
+    } else if (type === "search") {
+      return res.status(200).json(data.data.Page.media);
+    } else if (type === "info") {
+      return res.status(200).json(data.data.Media);
     }
-  }
-`;
-
-// Routes
-app.use(express.json()); // Parse JSON requests
-
-// Route: Anime Info
-app.post('/meta/anilist/info/:id', async (req, res) => {
-  const { id } = req.params;
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: 'Valid Anime ID is required' });
-  }
-
-  try {
-    const variables = { id: parseInt(id, 10) };
-    const data = await fetchAnilistData(getAnilistAnimeQuery, variables);
-
-    const anime = data.data.Media;
-    anime.recommendations = anime.recommendations.edges.map((edge) => edge.node.mediaRecommendation);
-
-    res.status(200).json({ results: anime });
   } catch (error) {
-    console.error('Error fetching anime info:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
-});
-
-// Route: Trending Anime
-app.post('/meta/anilist/trending', async (req, res) => {
-  try {
-    const data = await fetchAnilistData(getAnilistTrendingQuery);
-    res.status(200).json({ results: data.data.Page.media });
-  } catch (error) {
-    console.error('Error fetching trending anime:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Export the Express app wrapped in serverless-http
-export default serverless(app);
+};
