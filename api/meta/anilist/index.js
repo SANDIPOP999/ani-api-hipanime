@@ -1,3 +1,4 @@
+import axios from 'axios';
 const fetch = require('node-fetch');
 
 // Helper function to fetch data from AniList API
@@ -73,8 +74,8 @@ const getAnilistSearchQuery = (query) => `
 `;
 
 const getAnilistAnimeQuery = (id) => `
-  query {
-    Media(id: ${id}) {
+  query ($id: Int, $search: String) {
+    Media(id: {$id}, search: $search, type: ANIME) {
       id
       title {
         romaji
