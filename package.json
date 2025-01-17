@@ -1,21 +1,16 @@
 {
-  "name": "hipanime-api",
+  "name": "hipanime-ani-api",
   "version": "1.0.0",
-  "description": "An API using AniList GraphQL for anime info and trending anime with Express.js and Vercel deployment.",
-  "main": "api/meta/anilist/index.js",
-  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {},
   "scripts": {
     "start": "vercel dev"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "node-fetch": "^3.3.1",
-    "serverless-http": "^2.7.0"
-  },
-  "devDependencies": {},
   "engines": {
-    "node": ">=14"
-  },
-  "author": "Your Name",
-  "license": "MIT"
+    "node": "16.x"
+  }
 }
