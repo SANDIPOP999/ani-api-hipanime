@@ -4,16 +4,32 @@
     {
       "src": "api/meta/anilist/index.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "pages/index.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/meta/anilist/info/:id",
-      "dest": "/api/meta/anilist/index.js"
+      "src": "/meta/anilist/banner",
+      "dest": "/api/meta/anilist/index.js?type=banner"
     },
     {
-      "src": "/api/meta/anilist/trending",
-      "dest": "/api/meta/anilist/index.js"
+      "src": "/meta/anilist/trending",
+      "dest": "/api/meta/anilist/index.js?type=trending"
+    },
+    {
+      "src": "/meta/anilist/upcoming",
+      "dest": "/api/meta/anilist/index.js?type=upcoming"
+    },
+    {
+      "src": "/meta/anilist/search",
+      "dest": "/api/meta/anilist/index.js?type=search"
+    },
+    {
+      "src": "/meta/anilist/anime",
+      "dest": "/api/meta/anilist/index.js?type=anime"
     },
     {
       "src": "/",
