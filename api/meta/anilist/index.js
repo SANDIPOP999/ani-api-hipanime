@@ -1,3 +1,4 @@
+const express = require('express');
 const fetch = require('node-fetch');
 
 // Helper function to fetch data from AniList API
@@ -20,7 +21,7 @@ async function fetchAnilistData(query, variables = {}) {
   return res.json();
 }
 
-// GraphQL Queries
+// GraphQL Query for Anime Info
 const getAnilistAnimeQuery = `
   query ($id: Int) {
     Media(id: $id, type: ANIME) {
@@ -81,6 +82,7 @@ const getAnilistAnimeQuery = `
   }
 `;
 
+// GraphQL Query for Trending Anime
 const getAnilistTrendingQuery = `
   query {
     Page {
@@ -98,78 +100,41 @@ const getAnilistTrendingQuery = `
   }
 `;
 
-const getAnilistSearchQuery = `
-  query ($search: String) {
-    Page(page: 1, perPage: 10) {
-      media(search: $search, type: ANIME) {
-        id
-        title {
-          romaji
-          english
-        }
-        coverImage {
-          large
-        }
-      }
-    }
-  }
-`;
+const app = express();
 
-// API Handler
-module.exports = async (req, res) => {
-  const { type, id, query: searchQuery } = req.query;
+// Middleware to handle JSON body parsing
+app.use(express.json());
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+// Route to fetch anime info by ID
+app.post('/api/meta/anilist/info/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ error: "Valid Anime ID is required in the URL" });
   }
 
   try {
-    let query;
-    let variables = {};
-
-    switch (type) {
-      case 'info': {
-        if (!id || isNaN(id)) {
-          return res.status(400).json({ error: "Valid Anime ID is required in the URL" });
-        }
-        query = getAnilistAnimeQuery;
-        variables = { id: parseInt(id) };
-        break;
-      }
-
-      case 'trending': {
-        query = getAnilistTrendingQuery;
-        break;
-      }
-
-      case 'search': {
-        if (!searchQuery) {
-          return res.status(400).json({ error: "Search query is required in the URL" });
-        }
-        query = getAnilistSearchQuery;
-        variables = { search: searchQuery };
-        break;
-      }
-
-      default:
-        return res.status(400).json({ error: "Invalid endpoint type" });
-    }
-
-    const data = await fetchAnilistData(query, variables);
-
-    if (type === 'info') {
-      const anime = data.data.Media;
-      anime.recommendations = anime.recommendations.edges.map(edge => edge.node.mediaRecommendation);
-      return res.status(200).json({ results: anime });
-    } else if (type === 'trending') {
-      return res.status(200).json({ results: data.data.Page.media });
-    } else if (type === 'search') {
-      return res.status(200).json({ results: data.data.Page.media });
-    }
-
-    res.status(200).json({ results: data });
+    const variables = { id: parseInt(id) };
+    const data = await fetchAnilistData(getAnilistAnimeQuery, variables);
+    const anime = data.data.Media;
+    anime.recommendations = anime.recommendations.edges.map(edge => edge.node.mediaRecommendation);
+    res.status(200).json({ results: anime });
   } catch (error) {
     console.error("Error:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
-};
+});
+
+// Route to fetch trending anime
+app.post('/api/meta/anilist/trending', async (req, res) => {
+  try {
+    const data = await fetchAnilistData(getAnilistTrendingQuery);
+    res.status(200).json({ results: data.data.Page.media });
+  } catch (error) {
+    console.error("Error:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Export the Express app as a serverless function for Vercel
+module.exports = app;
