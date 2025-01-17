@@ -4,10 +4,6 @@
     {
       "src": "api/meta/anilist/index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "pages/index.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
