@@ -32,6 +32,10 @@
       "dest": "/api/meta/anilist/index.js?type=info"
     },
     {
+      "src": "/meta/anilist/spotlights",
+      "dest": "/api/meta/anilist/index.js?type=spotlights"
+    },
+    {
       "src": "/",
       "dest": "/pages/index.html"
     }
