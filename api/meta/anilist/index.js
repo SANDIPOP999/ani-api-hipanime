@@ -127,6 +127,7 @@ const getAnilistSpotlightsQuery = `
         coverImage {
           large
         }
+        bannerImage
         averageScore
         episodes
         genres
