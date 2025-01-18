@@ -115,6 +115,26 @@ const getAnilistSearchQuery = `
   }
 `;
 
+const getAnilistSpotlightsQuery = `
+  query {
+    Page(page: 1, perPage: 10) {
+      media(type: ANIME, sort: SCORE_DESC, status: RELEASING) {
+        id
+        title {
+          romaji
+          english
+        }
+        coverImage {
+          large
+        }
+        averageScore
+        episodes
+        genres
+      }
+    }
+  }
+`;
+
 // API Handler
 module.exports = async (req, res) => {
   const { type, id, query: searchQuery } = req.query;
@@ -151,6 +171,11 @@ module.exports = async (req, res) => {
         break;
       }
 
+      case 'spotlights': {
+        query = getAnilistSpotlightsQuery;
+        break;
+      }
+
       default:
         return res.status(400).json({ error: "Invalid endpoint type" });
     }
@@ -161,9 +186,7 @@ module.exports = async (req, res) => {
       const anime = data.data.Media;
       anime.recommendations = anime.recommendations.edges.map(edge => edge.node.mediaRecommendation);
       return res.status(200).json({ results: anime });
-    } else if (type === 'trending') {
-      return res.status(200).json({ results: data.data.Page.media });
-    } else if (type === 'search') {
+    } else if (type === 'trending' || type === 'spotlights' || type === 'search') {
       return res.status(200).json({ results: data.data.Page.media });
     }
 
