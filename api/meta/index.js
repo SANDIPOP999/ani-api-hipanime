@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 const MAL_API_BASE = "https://api.myanimelist.net/v2";
-const CLIENT_ID = 260059a888a69c48056f6eec62df6408;  // Store in .env
+const CLIENT_ID = "260059a888a69c48056f6eec62df6408";  // Store in .env
 
 // Function to fetch data from MAL API
 const fetchMALData = async (endpoint, params = {}) => {
