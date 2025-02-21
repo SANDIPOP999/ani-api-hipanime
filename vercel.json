@@ -1,7 +1,8 @@
 {
   "version": 2,
+  "builds": [{ "src": "api/meta/index.js", "use": "@vercel/node" }],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/meta/index.js" },
+    { "src": "/api/meta/(.*)", "dest": "/api/meta/index.js" },
     { "src": "/(.*)", "dest": "/pages/index.html" }
   ]
 }
