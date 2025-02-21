@@ -2,9 +2,9 @@
   "name": "hip-api-server",
   "version": "1.0.0",
   "description": "A MyAnimeList API replacement hosted on Vercel",
-  "main": "api/mera/index.js",
+  "main": "api/meta/index.js",
   "scripts": {
-    "start": "node api/mera/index.js",
+    "start": "node api/meta/index.js",
     "dev": "vercel dev",
     "deploy": "vercel"
   },
