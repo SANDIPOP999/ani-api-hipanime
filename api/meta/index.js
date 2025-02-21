@@ -7,8 +7,7 @@ const Fuse = require('fuse.js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MAL_CLIENT_ID = process.env.MAL_CLIENT_ID;
-const MONGO_URI = "mongodb+srv://hipanime-search:8yXkgro37GtGQcie@dbfuzzysearchhipanime.qa3er.mongodb.net/?retryWrites=true&w=majority&appName=DbFuzzySearchHipanime";
-
+const MONGO_URI = progress.env.MONGODB_URI;
 // ✅ Connect to MongoDB
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
