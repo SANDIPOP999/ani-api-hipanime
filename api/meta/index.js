@@ -8,9 +8,9 @@ module.exports = async (req, res) => {
         const { type, query, id } = req.query;
 
         if (type === "banner") {
-            // Fetch Top 10 Trending Anime from MAL
+            // Fetch Top 10 Airing Anime (For Wide Banners)
             const malResponse = await axios.get(
-                `https://api.myanimelist.net/v2/anime/ranking?ranking_type=bypopularity&limit=10`,
+                `https://api.myanimelist.net/v2/anime/ranking?ranking_type=airing&limit=10`,
                 { headers: { "X-MAL-CLIENT-ID": CLIENT_ID } }
             );
 
@@ -62,7 +62,10 @@ module.exports = async (req, res) => {
                 title: anime.title,
                 synopsis: anime.synopsis,
                 episodes: anime.episodes,
+                duration: jikanData.duration,  // Episode duration
                 status: anime.status,
+                airing: jikanData.airing,
+                season: jikanData.season ? `${jikanData.season} ${jikanData.year}` : "Unknown",
                 score: anime.mean,
                 rank: anime.rank,
                 genres: anime.genres.map(g => g.name),
@@ -74,7 +77,13 @@ module.exports = async (req, res) => {
                     role: c.role,
                     image: c.character.images.jpg.image_url
                 })) || [],
-                theme_songs: jikanData.theme.openings.concat(jikanData.theme.endings) || []
+                theme_songs: jikanData.theme.openings.concat(jikanData.theme.endings) || [],
+                related_anime: jikanData.relations?.map(r => ({
+                    relation: r.relation,
+                    title: r.entry[0]?.name,
+                    id: r.entry[0]?.mal_id,
+                    image: r.entry[0]?.images.jpg.image_url
+                })) || []
             });
         }
 
