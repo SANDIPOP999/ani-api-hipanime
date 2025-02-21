@@ -10,9 +10,12 @@ const MAL_CLIENT_ID = process.env.MAL_CLIENT_ID;
 const MONGO_URI = process.env.MONGODB_URI;
 
 // ✅ Connect to MongoDB
-mongoose.connect(MONGO_URI, {
+mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 20000, // 20 seconds timeout for server selection
+  socketTimeoutMS: 60000,  // 60 seconds timeout for sockets
+  bufferCommands: false,   // Disable buffering to prevent delays
 }).then(() => console.log('✅ MongoDB Connected')).catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 // ✅ Define Anime Schema
