@@ -1,125 +1,142 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const axios = require('axios');
-const Fuse = require('fuse.js');
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const axios = require("axios");
+const Fuse = require("fuse.js");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI;
 const MAL_CLIENT_ID = process.env.MAL_CLIENT_ID;
-const MONGO_URI = process.env.MONGODB_URI;
-// ✅ Connect to MongoDB
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 20000, // 20 seconds timeout for server selection
-  socketTimeoutMS: 60000,  // 60 seconds timeout for sockets
-  bufferCommands: false,   // Disable buffering to prevent delays
-}).then(() => console.log('✅ MongoDB Connected')).catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-// ✅ Define Anime Schema
+// MongoDB Connection
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("✅ MongoDB Connected"))
+    .catch(err => console.error("❌ MongoDB Connection Error:", err));
+
+// Define Anime Schema
 const animeSchema = new mongoose.Schema({
-  mal_id: Number,
-  title: String,
-  synopsis: String,
-  episodes: Number,
-  status: String,
-  genres: [String],
-  banner: String,
-  cover: String,
-  season: String,
-  year: Number,
-  score: Number,
-  themes: [String],
-  characters: [String],
-  trailer: String,
-  createdAt: { type: Date, default: Date.now }
+    mal_id: Number,
+    title: String,
+    title_english: String,
+    type: String,
+    status: String,
+    season: String,
+    year: Number,
+    score: Number,
+    rank: Number,
+    popularity: Number,
+    genres: [String],
+    studios: [String],
+    image: String,
+    trailer: String,
+    mal_url: String,
+    synopsis: String
 });
 
-const Anime = mongoose.model('Anime', animeSchema);
+const Anime = mongoose.model("Anime", animeSchema);
 
-// ✅ Fetch Anime from MAL API
-const fetchAnimeFromMAL = async (query) => {
-  try {
-    const response = await axios.get(`https://api.myanimelist.net/v2/anime?q=${query}&limit=10&fields=id,title,synopsis,episodes,status,genres,main_picture,start_season,mean,related_anime,background,studios,theme,pictures,media_type`, {
-      headers: { 'X-MAL-CLIENT-ID': MAL_CLIENT_ID }
-    });
+// Fetch Data from Both MAL & Jikan
+async function fetchAnimeDetails(mal_id) {
+    try {
+        // Fetch from Jikan
+        const jikanRes = await axios.get(`https://api.jikan.moe/v4/anime/${mal_id}/full`);
+        const jikanData = jikanRes.data.data;
 
-    return response.data.data.map(anime => ({
-      mal_id: anime.node.id,
-      title: anime.node.title,
-      synopsis: anime.node.synopsis || 'No synopsis available.',
-      episodes: anime.node.episodes || 'Unknown',
-      status: anime.node.status || 'Unknown',
-      genres: anime.node.genres?.map(g => g.name) || [],
-      banner: anime.node.main_picture?.large || '',
-      cover: anime.node.main_picture?.medium || '',
-      season: anime.node.start_season?.season || 'Unknown',
-      year: anime.node.start_season?.year || 'Unknown',
-      score: anime.node.mean || 'N/A',
-      themes: anime.node.theme || [],
-      characters: anime.node.characters || [],
-      trailer: anime.node.trailer || '',
-    }));
-  } catch (error) {
-    console.error('❌ Error Fetching MAL API:', error.message);
-    return [];
-  }
-};
+        // Fetch from MAL
+        const malRes = await axios.get(`https://api.myanimelist.net/v2/anime/${mal_id}?fields=id,title,main_picture,genres,studios,synopsis`,
+            { headers: { "X-MAL-CLIENT-ID": MAL_CLIENT_ID } });
+        const malData = malRes.data;
 
-// ✅ Store Anime in MongoDB
-const storeAnimeInDB = async (animeList) => {
-  try {
-    for (const anime of animeList) {
-      await Anime.findOneAndUpdate({ mal_id: anime.mal_id }, anime, { upsert: true, new: true });
+        // Merge Data
+        return {
+            mal_id,
+            title: malData.title || jikanData.title,
+            title_english: jikanData.title_english || malData.title,
+            type: jikanData.type,
+            status: jikanData.status,
+            season: jikanData.season,
+            year: jikanData.year,
+            score: jikanData.score,
+            rank: jikanData.rank,
+            popularity: jikanData.popularity,
+            genres: jikanData.genres.map(g => g.name),
+            studios: jikanData.studios.map(s => s.name),
+            image: malData.main_picture?.large || jikanData.images?.jpg?.large_image_url,
+            trailer: jikanData.trailer?.url || null,
+            mal_url: `https://myanimelist.net/anime/${mal_id}`,
+            synopsis: malData.synopsis || jikanData.synopsis
+        };
+    } catch (err) {
+        console.error(`❌ Error fetching anime (ID: ${mal_id}):`, err.message);
+        return null;
     }
-    console.log('✅ Anime data updated in MongoDB');
-  } catch (error) {
-    console.error('❌ Error Storing in MongoDB:', error.message);
-  }
-};
+}
 
-// ✅ Fetch & Store Anime in DB every 24 Hours
-const updateAnimeDatabase = async () => {
-  const trendingAnime = await fetchAnimeFromMAL('trending');
-  if (trendingAnime.length > 0) {
-    await storeAnimeInDB(trendingAnime);
-  }
-};
+// Fetch & Store Anime Data
+async function fetchAndStoreAnime() {
+    try {
+        console.log("🔄 Fetching anime data...");
+        const { data } = await axios.get("https://api.jikan.moe/v4/top/anime");
 
-setInterval(updateAnimeDatabase, 24 * 60 * 60 * 1000); // Every 24 hours
-updateAnimeDatabase();
+        for (const anime of data.data) {
+            const existingAnime = await Anime.findOne({ mal_id: anime.mal_id });
+            const animeData = await fetchAnimeDetails(anime.mal_id);
 
-// ✅ Implement Fuzzy Search
-let fuse;
-const initializeFuzzySearch = async () => {
-  const allAnime = await Anime.find();
-  fuse = new Fuse(allAnime, {
-    keys: ['title', 'synopsis', 'genres'],
-    threshold: 0.3
-  });
-  console.log('✅ Fuzzy Search Initialized');
-};
+            if (!animeData) continue; // Skip if failed to fetch
 
-initializeFuzzySearch();
+            if (existingAnime) {
+                await Anime.updateOne({ mal_id: anime.mal_id }, animeData);
+            } else {
+                await Anime.create(animeData);
+            }
+        }
+        console.log("✅ Anime data updated successfully!");
+    } catch (err) {
+        console.error("❌ Error fetching anime data:", err);
+    }
+}
 
-// ✅ API Routes
-app.get('/meta/search', async (req, res) => {
-  const query = req.query.query;
-  if (!query) return res.status(400).json({ error: 'Missing query parameter' });
+// Fetch Anime Every 12 Hours
+setInterval(fetchAndStoreAnime, 12 * 60 * 60 * 1000);
+fetchAndStoreAnime();
 
-  const results = fuse.search(query).map(result => result.item).slice(0, 10);
-  res.json(results);
+// Search Endpoint (Fuzzy Search)
+app.get("/search", async (req, res) => {
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ error: "Missing search query" });
+
+    try {
+        const animes = await Anime.find();
+        const fuse = new Fuse(animes, { keys: ["title", "title_english"], threshold: 0.3 });
+        const results = fuse.search(query).map(result => result.item);
+        res.json(results);
+    } catch (err) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
-app.get('/meta/info', async (req, res) => {
-  const mal_id = req.query.id;
-  if (!mal_id) return res.status(400).json({ error: 'Missing id parameter' });
-
-  const anime = await Anime.findOne({ mal_id });
-  if (!anime) return res.status(404).json({ error: 'Anime not found' });
-
-  res.json(anime);
+// Get Anime Metadata
+app.get("/meta/:id", async (req, res) => {
+    try {
+        const anime = await Anime.findOne({ mal_id: req.params.id });
+        if (!anime) return res.status(404).json({ error: "Anime not found" });
+        res.json(anime);
+    } catch (err) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+// Get Trending Anime Banners
+app.get("/meta/banner", async (req, res) => {
+    try {
+        const trendingAnime = await Anime.find().sort({ popularity: 1 }).limit(10);
+        const banners = trendingAnime.map(a => ({ title: a.title, image: a.image }));
+        res.json(banners);
+    } catch (err) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+// Start Express Server
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
