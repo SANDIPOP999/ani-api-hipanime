@@ -1,56 +1,47 @@
-const express = require("express");
-const axios = require("axios");
 require("dotenv").config();
+const axios = require("axios");
 
-const app = express();
-app.use(express.json());
+const CLIENT_ID = process.env.MAL_CLIENT_ID;  // Store in .env
 
-const MAL_API_BASE = "https://api.myanimelist.net/v2";
-const CLIENT_ID = "260059a888a69c48056f6eec62df6408";  // Store in .env
+module.exports = async (req, res) => {
+    try {
+        const { type, query } = req.query;
+        let apiUrl = "";
 
-// Function to fetch data from MAL API
-const fetchMALData = async (endpoint, params = {}) => {
-  try {
-    const response = await axios.get(`${MAL_API_BASE}${endpoint}`, {
-      headers: { "X-MAL-CLIENT-ID": CLIENT_ID },
-      params,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("MAL API Error:", error.response?.data || error.message);
-    return null;
-  }
+        // Select the correct endpoint based on the request type
+        switch (type) {
+            case "banner":
+                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=all&limit=10`;
+                break;
+            case "trending":
+                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=bypopularity&limit=10`;
+                break;
+            case "upcoming":
+                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=upcoming&limit=10`;
+                break;
+            case "search":
+                if (!query) return res.status(400).json({ error: "Missing query parameter" });
+                apiUrl = `https://api.myanimelist.net/v2/anime?q=${encodeURIComponent(query)}&limit=10`;
+                break;
+            case "info":
+                if (!query) return res.status(400).json({ error: "Missing anime ID" });
+                apiUrl = `https://api.myanimelist.net/v2/anime/${query}`;
+                break;
+            case "spotlights":
+                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=favorite&limit=10`;
+                break;
+            default:
+                return res.status(404).json({ error: "Invalid API route" });
+        }
+
+        // Fetch data from MAL API
+        const response = await axios.get(apiUrl, {
+            headers: { "X-MAL-CLIENT-ID": CLIENT_ID }
+        });
+
+        return res.json(response.data);
+    } catch (error) {
+        console.error("API Error:", error.response?.data || error.message);
+        return res.status(500).json({ error: "Internal Server Error", details: error.response?.data || error.message });
+    }
 };
-
-// 📌 API Endpoints
-app.get("/api/meta/index", async (req, res) => {
-  const { type, q, id } = req.query;
-
-  let data;
-  switch (type) {
-    case "banner":
-      data = await fetchMALData("/anime/ranking", { ranking_type: "all" });
-      break;
-    case "top_airing":
-      data = await fetchMALData("/anime/ranking", { ranking_type: "airing" });
-      break;
-    case "upcoming":
-      data = await fetchMALData("/anime/ranking", { ranking_type: "upcoming" });
-      break;
-    case "search":
-      data = await fetchMALData("/anime", { q });
-      break;
-    case "info":
-      if (!id) return res.status(400).json({ error: "Anime ID required" });
-      data = await fetchMALData(`/anime/${id}`);
-      break;
-    default:
-      return res.status(400).json({ error: "Invalid type" });
-  }
-
-  if (!data) return res.status(500).json({ error: "Failed to fetch data" });
-  res.json(data);
-});
-
-// Start Server
-module.exports = app;
