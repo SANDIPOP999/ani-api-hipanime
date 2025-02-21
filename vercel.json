@@ -1,43 +1,10 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/meta/anilist/index.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "pages/index.html",
-      "use": "@vercel/static"
-    }
+    { "src": "api/meta/index.js", "use": "@vercel/node" }
   ],
   "routes": [
-    {
-      "src": "/meta/anilist/banner",
-      "dest": "/api/meta/anilist/index.js?type=banner"
-    },
-    {
-      "src": "/meta/anilist/trending",
-      "dest": "/api/meta/anilist/index.js?type=trending"
-    },
-    {
-      "src": "/meta/anilist/upcoming",
-      "dest": "/api/meta/anilist/index.js?type=upcoming"
-    },
-    {
-      "src": "/meta/anilist/search",
-      "dest": "/api/meta/anilist/index.js?type=search"
-    },
-    {
-      "src": "/meta/anilist/info",
-      "dest": "/api/meta/anilist/index.js?type=info"
-    },
-    {
-      "src": "/meta/anilist/spotlights",
-      "dest": "/api/meta/anilist/index.js?type=spotlights"
-    },
-    {
-      "src": "/",
-      "dest": "/pages/index.html"
-    }
+    { "src": "/api/(.*)", "dest": "api/mera/index.js" },
+    { "src": "/", "dest": "/pages/index.html" }
   ]
 }
