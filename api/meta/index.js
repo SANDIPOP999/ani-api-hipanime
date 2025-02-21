@@ -10,8 +10,30 @@ module.exports = async (req, res) => {
 
         switch (type) {
             case "banner":
-                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=all&limit=10`;
-                break;
+                // Fetch top popular anime from MAL
+                const malResponse = await axios.get(`https://api.myanimelist.net/v2/anime/ranking?ranking_type=bypopularity&limit=10`, {
+                    headers: { "X-MAL-CLIENT-ID": CLIENT_ID }
+                });
+
+                // Fetch Jikan API data to get banner images
+                const bannerData = await Promise.all(
+                    malResponse.data.data.map(async (anime) => {
+                        try {
+                            const jikanRes = await axios.get(`https://api.jikan.moe/v4/anime/${anime.node.id}`);
+                            return {
+                                id: anime.node.id,
+                                title: anime.node.title,
+                                banner: jikanRes.data.data.images.jpg.large_image_url || anime.node.main_picture.large
+                            };
+                        } catch (err) {
+                            console.error(`Failed to fetch banner for ${anime.node.id}`);
+                            return null;
+                        }
+                    })
+                );
+
+                return res.json(bannerData.filter(Boolean));
+
             case "trending":
                 apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=bypopularity&limit=10`;
                 break;
@@ -35,6 +57,7 @@ module.exports = async (req, res) => {
 
                 return res.json({
                     ...malData.data,
+                    banner: jikanData.data.data.images.jpg.large_image_url || malData.data.main_picture.large,
                     characters: jikanData.data.data.characters?.map(c => ({
                         name: c.character.name,
                         image: c.character.images.jpg.image_url,
