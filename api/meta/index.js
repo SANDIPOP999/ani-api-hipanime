@@ -5,94 +5,48 @@ const CLIENT_ID = process.env.MAL_CLIENT_ID;
 
 module.exports = async (req, res) => {
     try {
-        const { type, query } = req.query;
-        let apiUrl = "";
+        const { type } = req.query;
 
-        switch (type) {
-            case "banner":
-                // Fetch top popular anime from MAL
-                const malResponse = await axios.get(`https://api.myanimelist.net/v2/anime/ranking?ranking_type=bypopularity&limit=10`, {
-                    headers: { "X-MAL-CLIENT-ID": CLIENT_ID }
-                });
+        if (type === "trending") {
+            // Fetch Top 10 Trending Anime from MAL
+            const malResponse = await axios.get(
+                `https://api.myanimelist.net/v2/anime/ranking?ranking_type=bypopularity&limit=10`,
+                { headers: { "X-MAL-CLIENT-ID": CLIENT_ID } }
+            );
 
-                // Fetch Jikan API data to get banner images
-                const bannerData = await Promise.all(
-                    malResponse.data.data.map(async (anime) => {
-                        try {
-                            const jikanRes = await axios.get(`https://api.jikan.moe/v4/anime/${anime.node.id}`);
-                            return {
-                                id: anime.node.id,
-                                title: anime.node.title,
-                                banner: jikanRes.data.data.images.jpg.large_image_url || anime.node.main_picture.large
-                            };
-                        } catch (err) {
-                            console.error(`Failed to fetch banner for ${anime.node.id}`);
-                            return null;
-                        }
-                    })
-                );
+            // Get banners for each anime
+            const trendingAnime = await Promise.all(
+                malResponse.data.data.map(async (anime) => {
+                    const malId = anime.node.id;
 
-                return res.json(bannerData.filter(Boolean));
-
-            case "trending":
-                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=bypopularity&limit=10`;
-                break;
-            case "upcoming":
-                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=upcoming&limit=10`;
-                break;
-            case "search":
-                if (!query) return res.status(400).json({ error: "Missing query parameter" });
-                apiUrl = `https://api.myanimelist.net/v2/anime?q=${encodeURIComponent(query)}&limit=10`;
-                break;
-            case "info":
-                if (!query) return res.status(400).json({ error: "Missing anime ID" });
-
-                // Fetch full anime details from MAL
-                const malData = await axios.get(`https://api.myanimelist.net/v2/anime/${query}?fields=id,title,main_picture,synopsis,genres,status,episodes,studios,mean,start_date,end_date,rank,popularity,media_type,source,average_episode_duration`, {
-                    headers: { "X-MAL-CLIENT-ID": CLIENT_ID }
-                });
-
-                // Fetch cast, staff, and theme songs from Jikan API
-                const jikanData = await axios.get(`https://api.jikan.moe/v4/anime/${query}/full`);
-
-                return res.json({
-                    ...malData.data,
-                    banner: jikanData.data.data.images.jpg.large_image_url || malData.data.main_picture.large,
-                    characters: jikanData.data.data.characters?.map(c => ({
-                        name: c.character.name,
-                        image: c.character.images.jpg.image_url,
-                        role: c.role,
-                        voice_actors: c.voice_actors.map(va => ({
-                            name: va.person.name,
-                            language: va.language,
-                            image: va.person.images.jpg.image_url
-                        }))
-                    })) || [],
-                    staff: jikanData.data.data.staff?.map(s => ({
-                        name: s.person.name,
-                        image: s.person.images.jpg.image_url,
-                        role: s.positions
-                    })) || [],
-                    theme_songs: {
-                        openings: jikanData.data.data.theme.openings || [],
-                        endings: jikanData.data.data.theme.endings || []
+                    // Fetch banner from Jikan API
+                    let banner = null;
+                    try {
+                        const jikanRes = await axios.get(`https://api.jikan.moe/v4/anime/${malId}`);
+                        banner = jikanRes.data.data.images.jpg.large_image_url || null;
+                    } catch (err) {
+                        console.error(`Jikan API failed for ${malId}`);
                     }
-                });
 
-            case "spotlights":
-                apiUrl = `https://api.myanimelist.net/v2/anime/ranking?ranking_type=favorite&limit=10`;
-                break;
-            default:
-                return res.status(404).json({ error: "Invalid API route" });
+                    // Fallback to MAL cover image if no banner found
+                    if (!banner) {
+                        banner = anime.node.main_picture.large || anime.node.main_picture.small;
+                    }
+
+                    return {
+                        id: malId,
+                        title: anime.node.title,
+                        banner
+                    };
+                })
+            );
+
+            return res.json(trendingAnime.filter(Boolean));
         }
 
-        const response = await axios.get(apiUrl, {
-            headers: { "X-MAL-CLIENT-ID": CLIENT_ID }
-        });
-
-        return res.json(response.data);
+        return res.status(404).json({ error: "Invalid API route" });
     } catch (error) {
-        console.error("API Error:", error.response?.data || error.message);
-        return res.status(500).json({ error: "Internal Server Error", details: error.response?.data || error.message });
+        console.error("API Error:", error.message);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
 };
