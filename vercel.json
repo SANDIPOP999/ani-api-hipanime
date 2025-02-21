@@ -17,11 +17,11 @@
     },
     {
       "src": "/meta/trending",
-      "dest": "/api/meta/index.js?type=trending"
+      "dest": "/api/meta/index.js"
     },
     {
       "src": "/meta/upcoming",
-      "dest": "/api/meta/index.js?type=upcoming"
+      "dest": "/api/meta/index.js"
     },
     {
       "src": "/meta/search",
