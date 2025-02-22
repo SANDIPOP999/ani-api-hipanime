@@ -1,25 +1,23 @@
 {
-  "name": "Hiapnime-data-api",
+  "name": "hipanime-ani-api",
   "version": "2.0.0",
-  "description": "A fully optimized Anime API with MongoDB, MAL, Jikan, Fuzzy Search, and Banner Fetching.",
+  "description": "Anime Metadata API using Jikan & MyAnimeList",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "axios": "^1.6.3",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "fuse.js": "^6.6.2",
-    "mongoose": "^7.6.0"
+    "mongoose": "^7.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=16"
-  },
-  "author": "Anonymous-Kun",
-  "license": "MIT"
+    "node": ">=14.0.0"
+  }
 }
