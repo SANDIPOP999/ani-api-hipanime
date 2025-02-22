@@ -1,23 +1,39 @@
 {
   "name": "hipanime-ani-api",
   "version": "2.0.0",
-  "description": "Anime Metadata API using Jikan & MyAnimeList",
+  "description": "Hipanime Ani API - A powerful Anime metadata API combining Jikan and MyAnimeList (MAL), featuring fuzzy search, banners, caching, and genre-based filtering.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "axios": "^1.7.9",
+    "axios": "^1.7.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "mongoose": "^7.0.3"
+    "fuzzysort": "^2.0.1",
+    "mongoose": "^7.3.0",
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=14.0.0"
-  }
+    "node": ">=16"
+  },
+  "keywords": [
+    "hipanime",
+    "anime",
+    "metadata",
+    "Jikan API",
+    "MAL",
+    "MongoDB",
+    "fuzzy search",
+    "banners",
+    "caching",
+    "Vercel"
+  ],
+  "author": "Anonymous-Kun",
+  "license": "MIT"
 }
