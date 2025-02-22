@@ -2,20 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/meta/index.js",
+      "src": "index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "pages/index.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
-    { "src": "/meta/banner", "dest": "/api/meta/index.js?type=banner" },
-    { "src": "/meta/top_airing", "dest": "/api/meta/index.js?type=top_airing" },
-    { "src": "/meta/upcoming", "dest": "/api/meta/index.js?type=upcoming" },
-    { "src": "/meta/search", "dest": "/api/meta/index.js?type=search" },
-    { "src": "/meta/info", "dest": "/api/meta/index.js?type=info" },
-    { "src": "/", "dest": "/pages/index.html" }
+    { "src": "/(.*)", "dest": "/index.js" }
   ]
 }
